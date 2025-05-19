@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Photo Electron</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      background: #f4f7fa;
+      color: #222;
+    }
+    header {
+      background: #2a4774;
+      color: white;
+      padding: 1.5em 2em 1em 2em;
+      border-bottom-left-radius: 16px;
+      border-bottom-right-radius: 16px;
+      box-shadow: 0 1px 8px #0001;
+    }
+    h1 {
+      margin: 0 0 0.3em 0;
+      font-size: 2.1em;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 0.4em;
+    }
+    h1 .icon {
+      font-size: 1.1em;
+    }
+    #rootPath {
+      background: #fff8e1;
+      color: #7c6316;
+      border-left: 4px solid #ffe082;
+      border-radius: 6px;
+      padding: 0.6em 1.2em;
+      margin: 1em 0 1.5em 0;
+      font-size: 1em;
+      font-family: monospace;
+      word-break: break-all;
+      box-shadow: 0 2px 5px #ffe08233;
+    }
+    main {
+      max-width: 680px;
+      margin: 2em auto 0 auto;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px #0001;
+      padding: 2em 2.5em;
+    }
+    section {
+      margin-bottom: 2.2em;
+    }
+    .section-title {
+      font-size: 1.11em;
+      margin-bottom: 0.6em;
+      color: #2a4774;
+      font-weight: 600;
+    }
+    .folders-list {
+      margin: 0.7em 0 1.2em 0;
+      padding-left: 1.2em;
+    }
+    .folders-list li {
+      margin-bottom: 0.3em;
+      font-family: monospace;
+      font-size: 1em;
+    }
+    .actions {
+      display: flex;
+      gap: 1em;
+      flex-wrap: wrap;
+      margin-bottom: 0.8em;
+    }
+    button, .btn-link {
+      padding: 0.6em 1.7em;
+      font-size: 1em;
+      border-radius: 7px;
+      border: none;
+      background: #2a4774;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.19s;
+      box-shadow: 0 1px 3px #0001;
+      display: flex;
+      align-items: center;
+      gap: 0.6em;
+    }
+    button:hover, .btn-link:hover {
+      background: #1b2942;
+      text-decoration: none;
+      color: #fff;
+    }
+    .btn-link {
+      background: #eee;
+      color: #2a4774;
+      border: 1px solid #adc1df;
+      box-shadow: none;
+      font-size: 1em;
+      padding: 0.5em 1.2em;
+    }
+    #logs {
+      background: #161e27;
+      color: #e0e0e0;
+      font-size: 13px;
+      padding: 1em;
+      height: 220px;
+      overflow-y: auto;
+      border-radius: 8px;
+      margin-top: 0.8em;
+      white-space: pre-wrap;
+      box-shadow: 0 2px 6px #0002;
+      border: 1px solid #2a477444;
+    }
+    /* Modal style */
+    #settingsModal {
+      position: fixed;
+      left: 0; top: 0; right: 0; bottom: 0;
+      background: #0008;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
+    #settingsModal.active {
+      display: flex;
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px #0003;
+      padding: 2.3em 2.2em 1.3em 2.2em;
+      min-width: 320px;
+      max-width: 96vw;
+      position: relative;
+    }
+    .modal-content h3 {
+      margin-top: 0;
+      color: #2a4774;
+      font-size: 1.19em;
+      margin-bottom: 1.1em;
+    }
+    .modal-content label {
+      display: block;
+      margin-bottom: 0.7em;
+      color: #3d3d3d;
+    }
+    .modal-content input {
+      width: 100%;
+      padding: 0.4em 0.6em;
+      margin-top: 0.19em;
+      border: 1px solid #adc1df;
+      border-radius: 5px;
+      font-size: 1em;
+      margin-bottom: 0.8em;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.9em;
+      margin-top: 1.2em;
+    }
+    @media (max-width: 600px) {
+      main { padding: 1em 0.3em; }
+      .modal-content { padding: 1.2em 0.8em; }
+      header { padding-left: 1em; padding-right: 1em; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><span class="icon">📸</span> Photo Electron</h1>
+    <div id="rootPath"></div>
+  </header>
+  <main>
+    <section>
+      <div class="section-title">Dossier de travail</div>
+      <ul class="folders-list" id="foldersList"></ul>
+      <div class="actions">
+        <button id="changeFolderBtn" title="Changer l’emplacement des dossiers"><span>📂</span>Changer de dossier</button>
+        <button id="showSettingsBtn" title="Modifier les paramètres de l’application"><span>⚙️</span>Paramètres</button>
+        <a href="http://localhost:4000/files/" class="btn-link" target="_blank" title="Ouvrir le hotfolder dans le navigateur"><span>🌐</span>Ouvrir le hotfolder</a>
+      </div>
+    </section>
+    <section>
+      <div class="section-title">Logs de l’application</div>
+      <div id="logs"></div>
+    </section>
+  </main>
+  <!-- Modal paramètres -->
+  <div id="settingsModal">
+    <div class="modal-content">
+      <h3>Paramètres de l’application</h3>
+      <form id="settingsForm">
+        <label>API URL :
+          <input type="text" id="apiUrlInput" placeholder="https://api.exemple.com">
+        </label>
+        <label>Port du serveur local :
+          <input type="number" id="portInput" min="1" max="65535" placeholder="4000">
+        </label>
+        <label>URL locale :
+          <input type="text" id="localUrlInput" placeholder="http://localhost">
+        </label>
+        <div class="modal-actions">
+          <button type="submit"><span>💾</span>Enregistrer</button>
+          <button type="button" id="closeSettingsBtn"><span>✖️</span>Annuler</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script src="renderer.js"></script>
+</body>
+</html>

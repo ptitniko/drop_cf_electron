@@ -1,0 +1,40 @@
+{
+    "name": "photo-electron",
+    "version": "1.0.0",
+    "description": "Starter Electron Express pour hotfolder photo",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron .",
+        "pack": "electron-builder --dir",
+        "dist": "electron-builder",
+        "postinstall": "electron-rebuild"
+    },
+    "build": {
+        "files": [
+            "**/*",
+            ".env"
+        ],
+        "appId": "com.photoelectron.app",
+        "mac": {
+            "target": "dmg"
+        },
+        "win": {
+            "target": "nsis"
+        }
+    },
+    "dependencies": {
+        "axios": "^1.6.0",
+        "chokidar": "^3.5.3",
+        "cors": "^2.8.5",
+        "dotenv": "^16.0.3",
+        "exiftool-vendored": "^23.7.0",
+        "express": "^4.18.2",
+        "fs-extra": "^11.1.1",
+        "jimp": "^1.6.0"
+    },
+    "devDependencies": {
+        "electron": "^29.0.0",
+        "electron-builder": "^24.9.1",
+        "electron-rebuild": "^3.2.9"
+    }
+}
