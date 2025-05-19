@@ -11,6 +11,7 @@ const Jimp = require("jimp");
 const stream = require('stream');
 const { promisify } = require('util');
 const finished = promisify(stream.finished);
+const { autoUpdater } = require('electron-updater');
 
 // --- CONFIGURATION --- //
 const settingsPath = path.join(app.getPath("userData"), "settings.json");
@@ -277,6 +278,19 @@ async function startExpressServer() {
 
 // --- INITIALISATION ELECTRON --- //
 app.whenReady().then(async () => {
+  // Vérifie et lance la mise à jour (au tout début)
+  autoUpdater.on('update-available', () => {
+    sendLog('🔄 Mise à jour disponible !');
+  });
+  autoUpdater.on('update-downloaded', () => {
+    sendLog('✅ Mise à jour téléchargée. Elle sera appliquée au prochain redémarrage.');
+  });
+  autoUpdater.on('error', err => {
+    sendLog('❌ Problème de mise à jour : ' + err);
+  });
+  
+  autoUpdater.checkForUpdatesAndNotify();
+  
   loadSettings();
   await ensureFolders();
   ensureConfig();
