@@ -327,7 +327,7 @@ app.whenReady().then(async () => {
   // Création de la fenêtre principale
   mainWindow = new BrowserWindow({
     width: 820,
-    height: 640,
+    height: 820,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
