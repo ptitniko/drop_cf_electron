@@ -1,6 +1,6 @@
 {
     "name": "photo-electron",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Application de communication avec la creative factory pour le traitement de photo",
     "author": "Nicolas Filloleau",
     "main": "main.js",
