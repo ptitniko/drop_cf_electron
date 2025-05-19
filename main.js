@@ -289,7 +289,14 @@ app.whenReady().then(async () => {
     sendLog('❌ Problème de mise à jour : ' + err);
   });
   
+  // Vérifie les mises à jour au lancement
   autoUpdater.checkForUpdatesAndNotify();
+
+  // Puis toutes les 30 secondes
+  setInterval(() => {
+    autoUpdater.checkForUpdatesAndNotify();
+  }, 30 * 1000); 
+
   
   loadSettings();
   await ensureFolders();
