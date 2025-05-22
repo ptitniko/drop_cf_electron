@@ -2,215 +2,626 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Photo Electron</title>
+  <title>Creative Factory - Moniteur du hotfolder</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      margin: 0;
-      background: #f4f7fa;
-      color: #222;
-    }
-    header {
-      background: #2a4774;
-      color: white;
-      padding: 1.5em 2em 1em 2em;
-      border-bottom-left-radius: 16px;
-      border-bottom-right-radius: 16px;
-      box-shadow: 0 1px 8px #0001;
-    }
-    h1 {
-      margin: 0 0 0.3em 0;
-      font-size: 2.1em;
-      letter-spacing: 2px;
-      display: flex;
-      align-items: center;
-      gap: 0.4em;
-    }
-    h1 .icon {
-      font-size: 1.1em;
-    }
-    #rootPath {
-      background: #fff8e1;
-      color: #7c6316;
-      border-left: 4px solid #ffe082;
-      border-radius: 6px;
-      padding: 0.6em 1.2em;
-      margin: 1em 0 1.5em 0;
-      font-size: 1em;
-      font-family: monospace;
-      word-break: break-all;
-      box-shadow: 0 2px 5px #ffe08233;
-    }
-    main {
-      max-width: 680px;
-      margin: 2em auto 0 auto;
-      background: #fff;
-      border-radius: 14px;
-      box-shadow: 0 2px 12px #0001;
-      padding: 2em 2.5em;
-    }
-    section {
-      margin-bottom: 2.2em;
-    }
-    .section-title {
-      font-size: 1.11em;
-      margin-bottom: 0.6em;
-      color: #2a4774;
-      font-weight: 600;
-    }
-    .folders-list {
-      margin: 0.7em 0 1.2em 0;
-      padding-left: 1.2em;
-    }
-    .folders-list li {
-      margin-bottom: 0.3em;
-      font-family: monospace;
-      font-size: 1em;
-    }
-    .actions {
-      display: flex;
-      gap: 1em;
-      flex-wrap: wrap;
-      margin-bottom: 0.8em;
-    }
-    button, .btn-link {
-      padding: 0.6em 1.7em;
-      font-size: 1em;
-      border-radius: 7px;
-      border: none;
-      background: #2a4774;
-      color: #fff;
-      cursor: pointer;
-      transition: background 0.19s;
-      box-shadow: 0 1px 3px #0001;
-      display: flex;
-      align-items: center;
-      gap: 0.6em;
-    }
-    button:hover, .btn-link:hover {
-      background: #1b2942;
-      text-decoration: none;
-      color: #fff;
-    }
-    .btn-link {
-      background: #eee;
-      color: #2a4774;
-      border: 1px solid #adc1df;
-      box-shadow: none;
-      font-size: 1em;
-      padding: 0.5em 1.2em;
-    }
-    #logs {
-      background: #161e27;
-      color: #e0e0e0;
-      font-size: 13px;
-      padding: 1em;
-      height: 220px;
-      overflow-y: auto;
-      border-radius: 8px;
-      margin-top: 0.8em;
-      white-space: pre-wrap;
-      box-shadow: 0 2px 6px #0002;
-      border: 1px solid #2a477444;
-    }
-    /* Modal style */
-    #settingsModal {
-      position: fixed;
-      left: 0; top: 0; right: 0; bottom: 0;
-      background: #0008;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 20;
-    }
-    #settingsModal.active {
-      display: flex;
-    }
-    .modal-content {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 24px #0003;
-      padding: 2.3em 2.2em 1.3em 2.2em;
-      min-width: 320px;
-      max-width: 96vw;
-      position: relative;
-    }
-    .modal-content h3 {
-      margin-top: 0;
-      color: #2a4774;
-      font-size: 1.19em;
-      margin-bottom: 1.1em;
-    }
-    .modal-content label {
-      display: block;
-      margin-bottom: 0.7em;
-      color: #3d3d3d;
-    }
-    .modal-content input {
-      width: 100%;
-      padding: 0.4em 0.6em;
-      margin-top: 0.19em;
-      border: 1px solid #adc1df;
-      border-radius: 5px;
-      font-size: 1em;
-      margin-bottom: 0.8em;
-    }
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.9em;
-      margin-top: 1.2em;
-    }
-    @media (max-width: 600px) {
-      main { padding: 1em 0.3em; }
-      .modal-content { padding: 1.2em 0.8em; }
-      header { padding-left: 1em; padding-right: 1em; }
-    }
+    :root {
+  --primary: #6366f1;
+  --bg: #f8fafc;
+  --card: #fff;
+  --shadow: 0 2px 24px 0 rgba(60,72,88,.10);
+  --text: #22223b;
+  --muted: #4b5563;
+  --log-bg: #f1f5f9;
+  --log-border: #e5e7eb;
+  --log-scroll: #a5b4fc55;
+  --log-title: #6b7280;
+  --modal-bg: rgba(30, 41, 59, 0.46);
+  --modal-card: #fff;
+  --modal-border: #e5e7eb;
+  --dnd-bg: rgba(99,102,241,0.14);
+  --dnd-border: #6366f1;
+  --danger: #dc2626;
+  --success: #059669;
+}
+
+[data-theme="dark"] {
+  --primary: #818cf8;
+  --bg: #181826;
+  --card: #22223b;
+  --shadow: 0 2px 36px 0 rgba(20,20,40,.34);
+  --text: #f3f3fa;
+  --muted: #b4b9d6;
+  --log-bg: #25263b;
+  --log-border: #353759;
+  --log-scroll: #6366f199;
+  --log-title: #b4b9d6;
+  --modal-bg: rgba(10, 14, 30, 0.66);
+  --modal-card: #202135;
+  --modal-border: #34344a;
+  --dnd-bg: rgba(99,102,241,0.12);
+  --dnd-border: #818cf8;
+  --danger: #f87171;
+  --success: #34d399;
+}
+
+html, body {
+  background: var(--bg);
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', Arial, sans-serif;
+  min-height: 100vh;
+  color: var(--text);
+  transition: background .2s, color .2s;
+}
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 12px;
+  position: relative;
+}
+.dashboard-main {
+  width: 100%;
+  max-width: 900px;
+  background: var(--card);
+  border-radius: 2rem;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2.5rem 2.5rem 2.2rem 2.5rem;
+  transition: box-shadow .2s, background .2s;
+  gap: 2.2rem;
+  position: relative;
+}
+.dashboard-main:hover {
+  box-shadow: 0 4px 36px 0 rgba(60,72,88,.13);
+}
+.topbar {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  position: absolute;
+  top: 1.5rem;
+  right: 2.2rem;
+  z-index: 2;
+  pointer-events: none;
+}
+.settings-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.18rem 0.18rem 0.18rem 0.18rem;
+  border-radius: .7rem;
+  transition: background .14s;
+  pointer-events: all;
+  outline: none;
+  margin-right: -0.3rem;
+}
+.settings-btn:focus,
+.settings-btn:hover {
+  background: #e0e7ff22;
+}
+[data-theme="dark"] .settings-btn:focus,
+[data-theme="dark"] .settings-btn:hover {
+  background: #353759;
+}
+.settings-icon {
+  width: 30px; height: 30px;
+  display: block;
+  color: var(--primary);
+  stroke-width: 2.2;
+}
+.dashboard-head {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+}
+.dashboard-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -.5px;
+  margin-bottom: 0.2rem;
+  text-align: center;
+}
+.pending-label {
+  color: var(--muted);
+  font-size: 1.08rem;
+  font-weight: 500;
+  letter-spacing: .01em;
+  margin-bottom: .18rem;
+}
+.pending-count {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.2rem;
+  margin-top: -0.10rem;
+  text-shadow: 0 1px 10px rgba(99,102,241,0.07);
+}
+.chart-area {
+  width: 100%;
+  max-width: 420px;
+  height: 100px;
+  margin-bottom: .5rem;
+  background: linear-gradient(90deg, #f1f5f9 90%, transparent 100%);
+  border-radius: 1rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0.3rem 0.5rem 0.7rem 0.5rem;
+  transition: background .2s;
+}
+[data-theme="dark"] .chart-area {
+  background: linear-gradient(90deg, #25263b 90%, transparent 100%);
+}
+.actions-row {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 1.1rem;
+  margin-top: 0.7rem;
+  flex-wrap: wrap;
+}
+.action-btn, .service-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.85rem 1.3rem;
+  font-size: 1.08rem;
+  font-weight: 600;
+  border: none;
+  border-radius: .75rem;
+  cursor: pointer;
+  transition: background .14s, color .14s;
+  box-shadow: 0 1px 6px rgba(99,102,241,0.07);
+  letter-spacing: .01em;
+  min-width: 165px;
+  justify-content: center;
+}
+.action-btn {
+  background: var(--primary);
+  color: #fff;
+}
+.action-btn:hover {
+  background: #4338ca;
+}
+.service-btn {
+  background: #e0e7ff;
+  color: var(--primary);
+}
+.service-btn.running {
+  background: var(--success);
+  color: #fff;
+}
+.service-btn.stopped {
+  background: var(--danger);
+  color: #fff;
+}
+.service-btn:not(.running):hover {
+  background: #c7d2fe;
+}
+.service-btn.running:hover {
+  background: #047857;
+}
+.service-btn.stopped:hover {
+  background: #b91c1c;
+}
+.service-icon {
+  width: 1.4em;
+  height: 1.4em;
+  vertical-align: middle;
+  display: inline-block;
+}
+.logs-section {
+  width: 100%;
+  max-width: 820px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+}
+.logs-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.1rem;
+  gap: 1rem;
+}
+.logs-title {
+  font-size: 1.13rem;
+  font-weight: 600;
+  color: var(--log-title);
+  margin-left: 0.1rem;
+  letter-spacing: -.01em;
+}
+.copy-btn {
+  background: #e0e7ff;
+  color: var(--primary);
+  font-weight: 600;
+  border: none;
+  border-radius: .6rem;
+  font-size: 1.01rem;
+  padding: 0.5rem 1.2rem;
+  cursor: pointer;
+  transition: background .15s;
+  box-shadow: 0 1px 4px rgba(99,102,241,0.09);
+  margin-left: auto;
+}
+.copy-btn:hover {
+  background: #c7d2fe;
+}
+[data-theme="dark"] .copy-btn {
+  background: #353759;
+  color: var(--primary);
+}
+.logs-area {
+  background: var(--log-bg);
+  border-radius: 1.1rem;
+  border: 1px solid var(--log-border);
+  font-family: "Fira Mono", "Consolas", "Menlo", monospace;
+  font-size: 0.98rem;
+  color: #2d3748;
+  height: 230px;
+  min-height: 90px;
+  max-height: 350px;
+  overflow-y: auto;
+  padding: 0.7rem 0.8rem 0.5rem 0.8rem;
+  box-shadow: 0 1px 4px rgba(60,72,88,.07);
+  white-space: pre-wrap;
+  line-height: 1.1;
+  transition: border .15s, background .2s;
+  scrollbar-width: thin;
+  scrollbar-color: var(--log-scroll) var(--log-bg);
+  position: relative;
+  z-index: 1;
+}
+[data-theme="dark"] .logs-area {
+  color: #e5e7eb;
+}
+.logs-area::-webkit-scrollbar {
+  width: 8px;
+  background: var(--log-bg);
+}
+.logs-area::-webkit-scrollbar-thumb {
+  background: var(--log-scroll);
+  border-radius: 8px;
+}
+.log-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.03rem;
+}
+.log-time {
+  color: #a1a1aa;
+  font-size: 0.91em;
+  min-width: 50px;
+  text-align: right;
+  flex-shrink: 0;
+  letter-spacing: -0.01em;
+}
+[data-theme="dark"] .log-time {
+  color: #818cf8;
+}
+.log-msg {
+  flex: 1 1 auto;
+  font-size: 0.97em;
+}
+.log-info { color: #6366f1; }
+.log-success { color: #059669; }
+.log-warn { color: #d97706; }
+.log-error { color: #dc2626; }
+[data-theme="dark"] .log-info { color: #818cf8;}
+[data-theme="dark"] .log-success { color: #34d399;}
+[data-theme="dark"] .log-warn { color: #fde68a;}
+[data-theme="dark"] .log-error { color: #f87171;}
+
+/* Modal styles */
+.modal-bg {
+  display: none;
+  position: fixed;
+  z-index: 30;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--modal-bg);
+  align-items: center;
+  justify-content: center;
+  animation: fadein .22s;
+}
+.modal-bg.open {
+  display: flex;
+}
+@keyframes fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.modal-card {
+  background: var(--modal-card);
+  border-radius: 1.3rem;
+  box-shadow: 0 10px 48px 0 rgba(60,72,88,.22);
+  border: 1px solid var(--modal-border);
+  min-width: 320px;
+  max-width: 98vw;
+  width: 390px;
+  padding: 2.2rem 1.6rem 2.1rem 1.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  position: relative;
+  animation: popup .24s;
+  transition: background .2s;
+}
+@keyframes popup {
+  from { transform: translateY(50px) scale(0.95); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+.modal-card h2 {
+  font-size: 1.18rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin: 0 0 0.2rem 0;
+  text-align: center;
+}
+.modal-close {
+  position: absolute;
+  top: 1rem; right: 1.2rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6366f1;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity .18s;
+}
+.modal-close:hover { opacity: 1; }
+.modal-form label {
+  font-weight: 500;
+  font-size: 1.02rem;
+  color: var(--muted);
+  margin-bottom: 0.16rem;
+  display: block;
+}
+.modal-form input[type="text"],
+.modal-form input[type="number"],
+.modal-form input[type="url"] {
+  width: 100%;
+  padding: 0.46rem 0.7rem;
+  font-size: 1.01rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.6rem;
+  margin-bottom: 0.4rem;
+  background: #f8fafc;
+  transition: border .15s;
+  color: var(--text);
+}
+[data-theme="dark"] .modal-form input[type="text"],
+[data-theme="dark"] .modal-form input[type="number"],
+[data-theme="dark"] .modal-form input[type="url"] {
+  background: #25263b;
+  color: #f3f3fa;
+  border: 1px solid #34344a;
+}
+.modal-form input:focus {
+  outline: none;
+  border: 1.5px solid #6366f1;
+  background: #fff;
+  color: var(--text);
+}
+[data-theme="dark"] .modal-form input:focus {
+  background: #202135;
+  color: #f3f3fa;
+  border: 1.5px solid #818cf8;
+}
+.modal-form .row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.2rem;
+}
+.modal-form .browse-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+}
+.modal-form .browse-btn {
+  background: #e0e7ff;
+  color: var(--primary);
+  font-weight: 600;
+  border: none;
+  border-radius: .4rem;
+  font-size: 0.97rem;
+  padding: 0.45rem 1.1rem;
+  cursor: pointer;
+  transition: background .14s;
+  margin-left: 0.1rem;
+}
+.modal-form .browse-btn:hover {
+  background: #c7d2fe;
+}
+[data-theme="dark"] .modal-form .browse-btn {
+  background: #353759;
+  color: #818cf8;
+}
+.modal-form .save-btn {
+  margin-top: 0.7rem;
+  width: 100%;
+  background: var(--primary);
+  color: #fff;
+  padding: 0.7rem 0;
+  font-size: 1.08rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 0.6rem;
+  cursor: pointer;
+  transition: background .14s;
+}
+.modal-form .save-btn:hover {
+  background: #4338ca;
+}
+
+/* Drag & Drop overlay */
+.dnd-overlay {
+  display: none;
+  position: fixed;
+  z-index: 40;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--dnd-bg);
+  border: 2.5px dashed var(--dnd-border);
+  border-radius: 2.2rem;
+  pointer-events: none;
+  transition: background .18s, border .18s;
+  align-items: center;
+  justify-content: center;
+  animation: fadein .18s;
+}
+.dnd-overlay.active {
+  display: flex;
+  pointer-events: all;
+}
+.dnd-message {
+  color: var(--primary);
+  background: #fff;
+  padding: 2.2rem 2.8rem;
+  border-radius: 1.2rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  box-shadow: 0 2px 16px rgba(60,72,88,.10);
+  border: 1.5px solid var(--dnd-border);
+  animation: popup .21s;
+  text-align: center;
+}
+[data-theme="dark"] .dnd-message {
+  background: #202135;
+  color: #818cf8;
+  border-color: #818cf8;
+}
+
+@media (max-width: 900px) {
+  .dashboard-main {
+    padding: 2rem 0.7rem 1.7rem 0.7rem;
+  }
+  .logs-section {
+    max-width: 98vw;
+  }
+  .chart-area {
+    max-width: 98vw;
+  }
+}
+@media (max-width: 600px) {
+  .dashboard-main {
+    padding: 0.8rem 0.1rem 1rem 0.1rem;
+    border-radius: 1.1rem;
+  }
+  .logs-section {
+    max-width: 99vw;
+  }
+  .modal-card {
+    min-width: unset;
+    width: 99vw;
+    padding: 1rem 0.5rem 1.2rem 0.5rem;
+  }
+  .dnd-message {
+    padding: 1.1rem 0.8rem;
+    font-size: 1.05rem;
+  }
+  .actions-row {
+    flex-direction: column;
+    gap: 0.6rem;
+    min-width: unset;
+  }
+  .action-btn, .service-btn {
+    min-width: unset;
+    width: 100%;
+  }
+}
   </style>
 </head>
 <body>
-  <header>
-    <h1>Drop to Creative Factory</h1>
-    <div id="rootPath"></div>
-  </header>
-  <main>
-    <section>
-      <div class="section-title">Dossier de travail</div>
-      <ul class="folders-list" id="foldersList"></ul>
-      <div class="actions">
-        <button id="changeFolderBtn" title="Changer l’emplacement des dossiers"><span>📂</span>Changer de dossier</button>
-        <button id="showSettingsBtn" title="Modifier les paramètres de l’application"><span>⚙️</span>Paramètres</button>
-        <a href="http://localhost:4000/files/" class="btn-link" target="_blank" title="Ouvrir le hotfolder dans le navigateur"><span>🌐</span>Ouvrir le hotfolder</a>
+  <div class="container" id="mainContainer">
+    <!-- Drag & Drop overlay -->
+    <div class="dnd-overlay" id="dndOverlay">
+      <div class="dnd-message">
+        Déposez votre image ici<br>
+        <span style="font-size:1rem;font-weight:400;color:#6366f1ad;">(elle sera ajoutée au hotfolder)</span>
       </div>
-    </section>
-    <section>
-      <div class="section-title">Logs de l’application</div>
-      <div id="logs"></div>
-    </section>
-  </main>
-  <!-- Modal paramètres -->
-  <div id="settingsModal">
-    <div class="modal-content">
-      <h3>Paramètres de l’application</h3>
-      <form id="settingsForm">
-        <label>API URL :
-          <input type="text" id="apiUrlInput" placeholder="https://api.exemple.com">
-        </label>
-        <label>Port du serveur local :
-          <input type="number" id="portInput" min="1" max="65535" placeholder="4000">
-        </label>
-        <label>URL locale :
-          <input type="text" id="localUrlInput" placeholder="http://localhost">
-        </label>
-        <div class="modal-actions">
-          <button type="submit"><span>💾</span>Enregistrer</button>
-          <button type="button" id="closeSettingsBtn"><span>✖️</span>Annuler</button>
+    </div>
+
+    <div class="dashboard-main">
+      <div class="topbar">
+        <button class="settings-btn" title="Paramètres" id="showSettingsBtn">
+          <svg class="settings-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3.2" stroke-width="2"/>
+            <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="dashboard-head">
+        <div class="dashboard-title">Hotfolder Monitor</div>
+        <div class="pending-label">Images en attente</div>
+        <div class="pending-count" id="imageCount">0</div>
+        <div id="graphique-container" style="width: 100%; max-width: 700px; margin: 2em auto;">
+          <canvas id="pendingChart"></canvas>
         </div>
+        <div class="actions-row">
+          <button class="action-btn" id="forceScanBtn">
+            <svg width="1.4em" height="1.4em" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:0.4em;">
+              <path stroke-width="2" d="M4 4v5h.582M20 20v-5h-.581M5 9A7 7 0 0 1 17 7.07M19 15a7 7 0 0 1-12-2.07"/>
+            </svg>
+            Forcer une analyse
+          </button>
+          <button class="service-btn stopped" id="serviceBtn">
+            <svg class="service-icon" id="serviceBtnIcon" viewBox="0 0 20 20" fill="currentColor">
+              <polygon id="serviceBtnPlay" points="6.5,5.5 6.5,14.5 14.5,10" />
+            </svg>
+            <span id="serviceBtnLabel">Démarrer le service</span>
+          </button>
+        </div>
+      </div>
+      <div class="logs-section">
+        <div class="logs-title-row">
+          <span class="logs-title">Logs en temps réel</span>
+          <button class="copy-btn" id="copyLogsBtn">Copier les logs</button>
+        </div>
+        <div class="logs-area" id="logsArea"></div>
+      </div>
+    </div>
+    <!-- Modal paramètres -->
+    <div class="modal-bg" id="settingsModal" tabindex="-1">
+      <form class="modal-card modal-form" id="settingsForm">
+        <button type="button" class="modal-close" id="closeSettingsBtn" title="Fermer">&times;</button>
+        <h2>Paramètres</h2>
+        <div class="row">
+          <label for="param-api">API URL</label>
+          <input id="param-api" type="text" required>
+        </div>
+        <div class="row">
+          <label for="param-port">Port du serveur local</label>
+          <input id="param-port" type="number" min="1" max="65535" required>
+        </div>
+        <div class="row">
+          <label for="param-local">URL locale</label>
+          <input id="param-local" type="text" required>
+        </div>
+        <div class="row">
+          <label for="param-folder">Dossier local</label>
+          <div class="browse-group">
+            <input id="param-folder" type="text" required readonly>
+            <button type="button" class="browse-btn" id="browseFolderBtn">Parcourir…</button>
+          </div>
+        </div>
+        <button class="save-btn" type="submit">Enregistrer</button>
       </form>
     </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>
