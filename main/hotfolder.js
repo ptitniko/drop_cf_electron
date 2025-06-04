@@ -51,8 +51,8 @@ async function processNewFile(filePath, settings, sendLog, updatePendingCount) {
     const payload = {
       processings: [
         {
-          client: "Bordeaux",
-          customer: "---",
+          client: settings.config.CLIENT,
+          customer: settings.config.CUSTOMER,
           forceGeneration: true,
           dataList: [
             {

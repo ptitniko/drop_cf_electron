@@ -4,8 +4,8 @@ const settingsModal = document.getElementById('settingsModal');
 const closeSettingsBtn = document.getElementById('closeSettingsBtn');
 const settingsForm = document.getElementById('settingsForm');
 const apiInput = document.getElementById('param-api');
-const portInput = document.getElementById('param-port');
-const localInput = document.getElementById('param-local');
+const clientInput = document.getElementById('param-client');
+const customerInput = document.getElementById('param-customer');
 const folderInput = document.getElementById('param-folder');
 const browseFolderBtn = document.getElementById('browseFolderBtn');
 const forceScanBtn = document.getElementById('forceScanBtn');
@@ -25,8 +25,8 @@ async function loadConfigAndFolders() {
   const config = await window.electronAPI.getConfig();
   const folders = await window.electronAPI.getUserFolders();
   apiInput.value = config?.API_URL || '';
-  portInput.value = config?.WEBHOOK_PORT || 4000;
-  localInput.value = config?.LOCAL_URL || 'http://localhost';
+  clientInput.value = config?.CLIENT || 'CLIENT';
+  customerInput.value = config?.CUSTOMER || 'CUSTOMER';
   folderInput.value = folders?.ROOT || '';
 }
 loadConfigAndFolders();
@@ -45,8 +45,8 @@ settingsForm.addEventListener('submit', async e => {
   e.preventDefault();
   await window.electronAPI.saveConfig({
     API_URL: apiInput.value,
-    WEBHOOK_PORT: Number(portInput.value),
-    LOCAL_URL: localInput.value
+    CLIENT: clientInput.value,
+    CUSTOMER: customerInput.value
   });
   settingsModal.classList.remove('open');
 });

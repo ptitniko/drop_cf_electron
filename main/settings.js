@@ -4,8 +4,8 @@ const fs = require('fs-extra');
 function getDefaultConfig() {
   return {
     API_URL: "",
-    WEBHOOK_PORT: 4000,
-    LOCAL_URL: "http://localhost"
+    CLIENT: "CLIENT",
+    LOCAL_URL: "CUSTOMER"
   };
 }
 
