@@ -58,15 +58,20 @@ async function processNewFile(filePath, settings, sendLog, updatePendingCount) {
             {
               context: {},
               data: {
-                s3Key: s3Key
+                imageUrl: s3Key
               }
             }
           ],
           actions: [
             {
-              key: "PHOTOROOM.REMOVE_BACKGROUND",
+              key: "PHOTOROOM.EDIT",
               settings: {
-                format: "png"
+                "export.format": "png",
+                "removeBackground": true,
+                "background.color": "transparent",
+                "background.scaling": "fill",
+                "padding": "20px",
+                "outputSize": "croppedSubject"
               }
             }
           ],
