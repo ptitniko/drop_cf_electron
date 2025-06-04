@@ -51,22 +51,22 @@ async function processNewFile(filePath, settings, sendLog, updatePendingCount) {
     const payload = {
       processings: [
         {
-          client: "Switch",
-          customer: "customer",
+          client: "Bordeaux",
+          customer: "---",
           forceGeneration: true,
           dataList: [
             {
               context: {},
               data: {
-                imageUrl: s3Key
+                s3Key: s3Key
               }
             }
           ],
           actions: [
             {
-              key: "PHOTOROOM.EDIT",
+              key: "PHOTOROOM.REMOVE_BACKGROUND",
               settings: {
-                removeBackground: true
+                format: "png"
               }
             }
           ],
