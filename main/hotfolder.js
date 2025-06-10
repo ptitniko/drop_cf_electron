@@ -70,7 +70,7 @@ async function processNewFile(filePath, settings, sendLog, updatePendingCount) {
                 "removeBackground": true,
                 "background.color": "transparent",
                 "background.scaling": "fill",
-                "padding": "20px",
+                "padding": settings.config.PADDING,
                 "outputSize": "croppedSubject"
               }
             }

@@ -6,6 +6,7 @@ const settingsForm = document.getElementById('settingsForm');
 const apiInput = document.getElementById('param-api');
 const clientInput = document.getElementById('param-client');
 const customerInput = document.getElementById('param-customer');
+const paddingInput = document.getElementById('param-padding');
 const folderInput = document.getElementById('param-folder');
 const browseFolderBtn = document.getElementById('browseFolderBtn');
 const forceScanBtn = document.getElementById('forceScanBtn');
@@ -27,6 +28,7 @@ async function loadConfigAndFolders() {
   apiInput.value = config?.API_URL || '';
   clientInput.value = config?.CLIENT || 'CLIENT';
   customerInput.value = config?.CUSTOMER || 'CUSTOMER';
+  paddingInput.value = config?.PADDING || '20px';
   folderInput.value = folders?.ROOT || '';
 }
 loadConfigAndFolders();
@@ -46,7 +48,8 @@ settingsForm.addEventListener('submit', async e => {
   await window.electronAPI.saveConfig({
     API_URL: apiInput.value,
     CLIENT: clientInput.value,
-    CUSTOMER: customerInput.value
+    CUSTOMER: customerInput.value,
+    PADDING: paddingInput.value
   });
   settingsModal.classList.remove('open');
 });
