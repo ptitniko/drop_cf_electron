@@ -20,7 +20,6 @@ const dndOverlay = document.getElementById('dndOverlay');
 const mainContainer = document.getElementById('mainContainer');
 const ctx = document.getElementById('pendingChart').getContext('2d');
 
-
 // --- PARAMÈTRES & FOLDERS ---
 async function loadConfigAndFolders() {
   const config = await window.electronAPI.getConfig();
@@ -131,7 +130,6 @@ window.electronAPI.onPendingCount((count) => {
   pendingChart.update();
 });
 
-
 // --- FORCE SCAN ---
 forceScanBtn.addEventListener('click', () => window.electronAPI.forceScan());
 
@@ -146,7 +144,6 @@ function updateServiceBtn(running) {
   serviceBtn.classList.toggle('running', running);
   serviceBtn.classList.toggle('stopped', !running);
   serviceBtnLabel.textContent = running ? "Arrêter le service" : "Démarrer le service";
-  // Change icon
   serviceBtnIcon.innerHTML = running
     ? '<rect x="6" y="5" width="3" height="10" rx="1"/><rect x="11" y="5" width="3" height="10" rx="1"/>'
     : '<polygon points="6.5,5.5 6.5,14.5 14.5,10" />';

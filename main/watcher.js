@@ -1,5 +1,3 @@
-// /main/watcher.js
-
 const chokidar = require("chokidar");
 
 /**
@@ -14,7 +12,12 @@ const chokidar = require("chokidar");
 function startWatcher(folderPath, onNewFile, sendLog, existingWatcher) {
   if (existingWatcher) existingWatcher.close();
   sendLog(`[Hotfolder] Surveillance du dossier : ${folderPath}`);
-  const watcher = chokidar.watch(folderPath, { persistent: true, ignoreInitial: true });
+  // EXCLUSION des sous-dossiers "metadata" si jamais ils existaient dans le hotfolder
+  const watcher = chokidar.watch(folderPath, {
+    persistent: true,
+    ignoreInitial: true,
+    ignored: /[\\\/]metadata[\\\/]?/i // exclut le dossier metadata si présent par erreur
+  });
   watcher.on("add", onNewFile);
   return watcher;
 }

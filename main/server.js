@@ -1,5 +1,3 @@
-// /main/server.js
-
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -68,13 +66,12 @@ let expressServer = null;
 /**
  * Lance ou relance le serveur Express sur le port spécifié dans settings.
  * Si un serveur existe déjà, il est fermé proprement.
- * @param {object} settings 
- * @param {function} sendLog 
- * @returns {Promise} 
+ * @param {object} settings
+ * @param {function} sendLog
+ * @returns {Promise}
  */
 async function startExpressServer(settings, sendLog, updatePendingCount) {
   const SERVER_PORT = settings.config.WEBHOOK_PORT || 4000;
-
   if (expressServer) {
     await new Promise(res => expressServer.close(res));
     expressServer = null;

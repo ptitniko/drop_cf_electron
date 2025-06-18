@@ -111,7 +111,6 @@ app.whenReady().then(async () => {
   });
 
   ipcMain.handle('forceScan', () => {
-    // Ici, tu pourrais lancer une analyse complète ou scanner à la demande
     sendLog('🔍 Analyse forcée du hotfolder lancée.');
     // startWatcher(); // ou une autre logique si tu veux vraiment rescanner
   });

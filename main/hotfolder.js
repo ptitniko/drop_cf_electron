@@ -23,7 +23,8 @@ async function extractAristidMetadata(filePath, sendLog) {
 
     if (aristidTags.length > 0) {
       const aristidMetadata = Object.fromEntries(aristidTags);
-      const metadataDir = path.resolve(__dirname, "../metadata"); // ou chemin absolu si besoin
+      // Toujours hors du hotfolder (racine du projet)
+      const metadataDir = path.resolve(__dirname, "../metadata");
       const metadataPath = path.join(
         metadataDir,
         `${path.parse(filePath).name}_aristid.json`
@@ -169,7 +170,6 @@ async function processNewFile(filePath, settings, sendLog, updatePendingCount) {
     sendLog(`🆔 Processing lancé (ID: ${processingId})`);
 
     await pollProcessingResult(processingId, filePath, fileName, settings, sendLog, updatePendingCount, aristidMetadata);
-
   } catch (error) {
     sendLog(`❌ Erreur lors du traitement de ${fileName} : ${error.message} | ${error.response ? JSON.stringify(error.response.data) : ''}`);
     await fs.move(filePath, path.join(settings.folders.ERROR, fileName), { overwrite: true });
@@ -192,7 +192,6 @@ async function pollProcessingResult(processingId, originalFilePath, fileName, se
     attempts++;
     try {
       await new Promise(res => setTimeout(res, pollingInterval));
-
       const resultResp = await axios.get(
         `${settings.config.API_URL.replace(/\/$/, "")}/api/processings/${processingId}/result`
       );
