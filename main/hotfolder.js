@@ -5,8 +5,74 @@ const FormData = require("form-data");
 const stream = require('stream');
 const { promisify } = require('util');
 const finished = promisify(stream.finished);
+const { exiftool } = require("exiftool-vendored");
+const { execFile } = require("child_process");
+const util = require("util");
+const execFileAsync = util.promisify(execFile);
 
 const VALID_EXTENSIONS = [".jpg", ".jpeg", ".png", ".tif", ".tiff"];
+
+async function extractAristidMetadata(filePath, sendLog) {
+  sendLog(`🔍 Extraction des métadonnées ARISTID de ${filePath}`);
+
+  try {
+    const tags = await exiftool.read(filePath);
+    const aristidTags = Object.entries(tags).filter(
+      ([key]) => key.toLowerCase().includes("aristid")
+    );
+
+    if (aristidTags.length > 0) {
+      const aristidMetadata = Object.fromEntries(aristidTags);
+      const metadataDir = path.resolve(__dirname, "../metadata"); // ou chemin absolu si besoin
+      const metadataPath = path.join(
+        metadataDir,
+        `${path.parse(filePath).name}_aristid.json`
+      );
+      await fs.ensureDir(metadataDir);
+      await fs.writeJson(metadataPath, aristidMetadata, { spaces: 2 });
+      sendLog(
+        `✅ ${aristidTags.length} métadonnée(s) ARISTID sauvegardée(s) dans ${metadataPath}`
+      );
+      return aristidMetadata;
+    } else {
+      sendLog("⚠️ Aucun nœud ARISTID trouvé");
+      return null;
+    }
+  } catch (err) {
+    sendLog(`❌ Erreur exiftool : ${err.message}`);
+    return null;
+  }
+}
+
+async function applyAristidShell(processedFilePath, aristidMetadata, sendLog) {
+  if (!aristidMetadata || Object.keys(aristidMetadata).length === 0) {
+    sendLog("ℹ️ Pas de données ARISTID à ré-appliquer");
+    return;
+  }
+
+  // Prépare les arguments pour exiftool shell avec -config
+  const args = [
+    '-config', 'aristid.config',
+    ...Object.entries(aristidMetadata).map(
+      ([key, value]) => `-XMP-ARISTID:${key}=${value}`
+    ),
+    '-overwrite_original',
+    processedFilePath
+  ];
+
+  sendLog(`🛠️ Injection ARISTID avec exiftool shell : exiftool ${args.join(' ')}`);
+
+  try {
+    const { stdout, stderr } = await execFileAsync('exiftool', args);
+    if (stderr && stderr.trim()) {
+      sendLog(`⚠️ exiftool stderr: ${stderr}`);
+    } else {
+      sendLog(`✅ Métadonnées ARISTID injectées avec succès via exiftool`);
+    }
+  } catch (err) {
+    sendLog(`❌ Erreur exiftool shell : ${err.message}`);
+  }
+}
 
 async function processNewFile(filePath, settings, sendLog, updatePendingCount) {
   const fileName = path.basename(filePath);
@@ -15,14 +81,18 @@ async function processNewFile(filePath, settings, sendLog, updatePendingCount) {
   if (!VALID_EXTENSIONS.includes(ext)) {
     await fs.move(filePath, path.join(settings.folders.ERROR, fileName), { overwrite: true });
     sendLog(`⚠️ Fichier non valide déplacé : ${fileName}`);
-    if (typeof updatePendingCount === 'function') updatePendingCount();
+    updatePendingCount?.();
     return;
   }
 
+  let aristidMetadata = null;
+
   try {
-    // 1. Upload image
+    aristidMetadata = await extractAristidMetadata(filePath, sendLog);
+
+    // Upload image
     sendLog(`⬆️ Upload de ${fileName} sur l'API...`);
-    updatePendingCount()
+    updatePendingCount?.();
     const form = new FormData();
     form.append('file', fs.createReadStream(filePath), fileName);
 
@@ -30,9 +100,7 @@ async function processNewFile(filePath, settings, sendLog, updatePendingCount) {
       `${settings.config.API_URL.replace(/\/$/, "")}/api/assets`,
       form,
       {
-        headers: {
-          ...form.getHeaders(),
-        },
+        headers: { ...form.getHeaders() },
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
       }
@@ -42,12 +110,12 @@ async function processNewFile(filePath, settings, sendLog, updatePendingCount) {
     if (!s3Key) {
       sendLog(`❌ Erreur : la clé S3 n'a pas été reçue. Réponse: ${JSON.stringify(uploadResponse.data)}`);
       await fs.move(filePath, path.join(settings.folders.ERROR, fileName), { overwrite: true });
-      if (typeof updatePendingCount === 'function') updatePendingCount();
+      updatePendingCount?.();
       return;
     }
     sendLog(`✅ Image uploadée. Clé S3 : ${s3Key}`);
 
-    // 2. Création du processing
+    // Création du processing
     const payload = {
       processings: [
         {
@@ -57,9 +125,7 @@ async function processNewFile(filePath, settings, sendLog, updatePendingCount) {
           dataList: [
             {
               context: {},
-              data: {
-                imageUrl: s3Key
-              }
+              data: { imageUrl: s3Key }
             }
           ],
           actions: [
@@ -81,9 +147,7 @@ async function processNewFile(filePath, settings, sendLog, updatePendingCount) {
             headers: {}
           },
           priority: 1,
-          resultOptions:{
-            preSignedUrls:true
-          }
+          resultOptions: { preSignedUrls: true }
         }
       ]
     };
@@ -94,33 +158,29 @@ async function processNewFile(filePath, settings, sendLog, updatePendingCount) {
       { headers: { "Content-Type": "application/json" } }
     );
 
-    // Récupère l'ID du processing
     const processingIds = processResponse.data;
     if (!processingIds || !Array.isArray(processingIds) || !processingIds[0]) {
       sendLog(`❌ Impossible de récupérer l'ID du processing. Réponse: ${JSON.stringify(processResponse.data)}`);
       await fs.move(filePath, path.join(settings.folders.ERROR, fileName), { overwrite: true });
-      if (typeof updatePendingCount === 'function') updatePendingCount();
+      updatePendingCount?.();
       return;
     }
     const processingId = processingIds[0];
     sendLog(`🆔 Processing lancé (ID: ${processingId})`);
 
-    // 3. Polling toutes les 2s sur l'avancement du traitement
-    await pollProcessingResult(processingId, filePath, fileName, settings, sendLog, updatePendingCount);
+    await pollProcessingResult(processingId, filePath, fileName, settings, sendLog, updatePendingCount, aristidMetadata);
 
   } catch (error) {
     sendLog(`❌ Erreur lors du traitement de ${fileName} : ${error.message} | ${error.response ? JSON.stringify(error.response.data) : ''}`);
     await fs.move(filePath, path.join(settings.folders.ERROR, fileName), { overwrite: true });
-    if (typeof updatePendingCount === 'function') updatePendingCount();
+    updatePendingCount?.();
   }
-  if (typeof updatePendingCount === 'function') updatePendingCount();
+  updatePendingCount?.();
 }
 
-async function pollProcessingResult(processingId, originalFilePath, fileName, settings, sendLog, updatePendingCount) {
+async function pollProcessingResult(processingId, originalFilePath, fileName, settings, sendLog, updatePendingCount, aristidMetadata) {
   const PROCESSED = settings.folders.PROCESSED;
-  const HOTFOLDER = settings.folders.HOTFOLDER;
-  const pollingInterval = 10000; // 2 secondes
-
+  const pollingInterval = 10000;
   let attempts = 0;
   let isCompleted = false;
   let errorCount = 0;
@@ -137,13 +197,11 @@ async function pollProcessingResult(processingId, originalFilePath, fileName, se
         `${settings.config.API_URL.replace(/\/$/, "")}/api/processings/${processingId}/result`
       );
       const data = resultResp.data;
-      sendLog(`🔄 [Tentative ${attempts}] Statut: ${JSON.stringify(data.outputs && data.outputs[0] && data.outputs[0].status)}`);
+      sendLog(`🔄 [Tentative ${attempts}] Statut: ${JSON.stringify(data.outputs?.[0]?.status)}`);
 
-      // Vérifie le statut
-      if (data.outputs && data.outputs[0] && data.outputs[0].status === "COMPLETED") {
+      if (data.outputs?.[0]?.status === "COMPLETED") {
         const preSignedUrls = data.outputs[0].preSignedUrls;
         if (preSignedUrls && preSignedUrls[0]) {
-          // Télécharge le fichier
           const outputExt = path.extname(preSignedUrls[0]).split('?')[0] || ".png";
           const outputFilePath = path.join(PROCESSED, path.parse(fileName).name + outputExt);
 
@@ -155,13 +213,20 @@ async function pollProcessingResult(processingId, originalFilePath, fileName, se
 
           sendLog(`✅ Fichier traité téléchargé : ${outputFilePath}`);
 
+          // Ré-appliquer les métadonnées ARISTID, si disponibles
+          if (aristidMetadata) {
+            await applyAristidShell(outputFilePath, aristidMetadata, sendLog);
+          } else {
+            sendLog(`ℹ️ Pas de métadonnées ARISTID disponibles pour ${fileName}`);
+          }
+
           // Supprime l'original du hotfolder
           if (await fs.pathExists(originalFilePath)) {
             await fs.remove(originalFilePath);
             sendLog(`🗃️ Fichier original supprimé du hotfolder : ${fileName}`);
           }
 
-          if (typeof updatePendingCount === 'function') updatePendingCount();
+          updatePendingCount?.();
         } else {
           sendLog(`❌ Résultat: preSignedUrls manquant`);
         }
@@ -169,8 +234,7 @@ async function pollProcessingResult(processingId, originalFilePath, fileName, se
         break;
       }
 
-      // Si le statut est FAILED, on arrête aussi
-      if (data.outputs && data.outputs[0] && data.outputs[0].status === "FAILED") {
+      if (data.outputs?.[0]?.status === "FAILED") {
         sendLog(`❌ Le traitement a échoué pour ${fileName}`);
         isCompleted = true;
         break;
