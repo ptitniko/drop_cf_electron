@@ -44,11 +44,12 @@ function createServer(settings, sendLog, updatePendingCount) {
       sendLog(`✅ Fichier téléchargé : ${baseName}.png`);
 
       if (await fs.pathExists(originalFilePath)) {
-        await fs.remove(originalFilePath);
-        sendLog(`🗃️ Fichier original supprimé du hotfolder : ${originalFileName}`);
+        const dest = path.join(settings.folders.ORIGINALS, path.basename(originalFilePath));
+        await fs.move(originalFilePath, dest, { overwrite: true });
+        sendLog(`🗃️ Fichier original déplacé dans 'originaux' : ${dest}`);
         if (typeof updatePendingCount === 'function') updatePendingCount();
       } else {
-        sendLog(`⚠️ Fichier original non trouvé pour suppression : ${originalFileName}`);
+        sendLog(`⚠️ Fichier original non trouvé pour déplacement : ${originalFileName}`);
       }
 
       res.status(200).send('Webhook traité avec succès.');

@@ -221,9 +221,11 @@ async function pollProcessingResult(processingId, originalFilePath, fileName, se
 
           // Supprime l'original du hotfolder
           if (await fs.pathExists(originalFilePath)) {
-            await fs.remove(originalFilePath);
-            sendLog(`🗃️ Fichier original supprimé du hotfolder : ${fileName}`);
+            const dest = path.join(settings.folders.ORIGINALS, path.basename(originalFilePath));
+            await fs.move(originalFilePath, dest, { overwrite: true });
+            sendLog(`🗃️ Fichier original déplacé dans 'originaux' : ${dest}`);
           }
+          
 
           updatePendingCount?.();
         } else {
