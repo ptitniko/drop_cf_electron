@@ -135,6 +135,7 @@ async function processNewFile(filePath, settings, sendLog, updatePendingCount) {
               settings: {
                 "export.format": "png",
                 "removeBackground": true,
+                "export.dpi":"300",
                 "background.color": "transparent",
                 "background.scaling": "fill",
                 "padding": settings.config.PADDING,
