@@ -44,10 +44,14 @@ function startWatcher() {
   const hotfolderPath = settings.folders.HOTFOLDER;
   watcher = watcherUtils.startWatcher(
     hotfolderPath,
-    filePath => hotfolder.processNewFile(filePath, settings, sendLog, updatePendingCount),
+    settings,
     sendLog,
+    updatePendingCount,
     watcher
   );
+  if (watcher && watcher.scanNow) {
+    watcher.scanNow(); // 🔍 Scan immédiat au lancement
+  }
 }
 
 // === INITIALISATION ELECTRON ===
@@ -111,8 +115,10 @@ app.whenReady().then(async () => {
   });
 
   ipcMain.handle('forceScan', () => {
-    sendLog('🔍 Analyse forcée du hotfolder lancée.');
-    // startWatcher(); // ou une autre logique si tu veux vraiment rescanner
+    sendLog('🔍 Scan manuel du hotfolder lancé.');
+    if (watcher && watcher.scanNow) {
+      watcher.scanNow();
+    }
   });
 
   ipcMain.handle('toggleService', () => {

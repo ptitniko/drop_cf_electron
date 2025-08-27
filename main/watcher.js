@@ -1,4 +1,3 @@
-// watcher.js
 const chokidar = require("chokidar");
 const path = require("path");
 const fs = require("fs-extra");
@@ -36,8 +35,8 @@ function startWatcher(folderPath, settings, sendLog, updatePendingCount, existin
 
   watcher.on("add", safeOnNewFile);
 
-  // Scan périodique toutes les 30s
-  const intervalId = setInterval(async () => {
+  // Fonction de scan à réutiliser
+  async function scanHotfolderNow() {
     try {
       const files = await fs.readdir(folderPath);
       for (const file of files) {
@@ -53,9 +52,16 @@ function startWatcher(folderPath, settings, sendLog, updatePendingCount, existin
     } catch (e) {
       sendLog(`[Hotfolder] Erreur lors du scan périodique : ${e.message}`);
     }
-  }, 30000);
+  }
+
+  // Scan périodique toutes les 30s
+  const intervalId = setInterval(scanHotfolderNow, 30000);
 
   watcher.on("close", () => clearInterval(intervalId));
+
+  // On expose la méthode de scan manuel
+  watcher.scanNow = scanHotfolderNow;
+
   return watcher;
 }
 
