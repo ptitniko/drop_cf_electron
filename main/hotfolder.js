@@ -10,8 +10,25 @@ const { exiftool } = require("exiftool-vendored");
 const { execFile } = require("child_process");
 const util = require("util");
 const execFileAsync = util.promisify(execFile);
+const { ProcessingTimeoutManager } = require("./processing-timeout");
+const { ProcessingPoller } = require("./adaptive-poller");
 
 const VALID_EXTENSIONS = [".jpg", ".jpeg", ".png", ".tif", ".tiff"];
+
+// Instances globales pour la gestion des timeouts et polling
+let timeoutManager = null;
+let processingPoller = null;
+
+function initializeManagers(settings, sendLog) {
+  if (!timeoutManager) {
+    timeoutManager = new ProcessingTimeoutManager(); // Utilise les variables d'environnement ou défaut
+    timeoutManager.initialize(settings, sendLog);
+  }
+  
+  if (!processingPoller) {
+    processingPoller = new ProcessingPoller(settings.config.API_URL, sendLog);
+  }
+}
 
 async function withRetry(fn, maxRetries = 3, delayMs = 2000, onError = () => {}) {
   let attempt = 0;
@@ -87,6 +104,9 @@ async function applyAristidShell(processedFilePath, aristidMetadata, sendLog) {
 }
 
 async function processNewFile(filePath, settings, sendLog, updatePendingCount) {
+  // Initialiser les managers si nécessaire
+  initializeManagers(settings, sendLog);
+  
   const fileName = path.basename(filePath);
   const ext = path.extname(fileName).toLowerCase();
   if (!VALID_EXTENSIONS.includes(ext)) {
@@ -180,60 +200,67 @@ async function processNewFile(filePath, settings, sendLog, updatePendingCount) {
 
 async function pollProcessingResult(processingId, originalFilePath, fileName, settings, sendLog, updatePendingCount, aristidMetadata) {
   const PROCESSED = settings.folders.PROCESSED;
-  const pollingInterval = 10000;
-  let attempts = 0;
-  let isCompleted = false;
-  let errorCount = 0;
-  const maxErrors = 100;
-  sendLog(`⏳ Suivi du processing (ID: ${processingId})...`);
-  while (!isCompleted && errorCount < maxErrors) {
-    attempts++;
-    try {
-      await new Promise(res => setTimeout(res, pollingInterval));
-      const resultResp = await axios.get(
-        `${settings.config.API_URL.replace(/\/$/, "")}/api/processings/${processingId}/result`
-      );
-      const data = resultResp.data;
-      sendLog(`🔄 [Tentative ${attempts}] Statut: ${JSON.stringify(data.outputs?.[0]?.status)}`);
-      if (data.outputs?.[0]?.status === "COMPLETED") {
+  
+  // Démarrer le suivi du timeout
+  if (timeoutManager) {
+    timeoutManager.startTracking(processingId, fileName, originalFilePath);
+  }
+  
+  sendLog(`⏳ Suivi du processing avec polling adaptatif (ID: ${processingId})...`);
+  
+  try {
+    await processingPoller.startPolling(
+      processingId,
+      // Callback de succès
+      async (data) => {
         const preSignedUrls = data.outputs[0].preSignedUrls;
         if (preSignedUrls && preSignedUrls[0]) {
           const outputExt = path.extname(preSignedUrls[0]).split("?")[0] || ".png";
           const outputFilePath = path.join(PROCESSED, path.parse(fileName).name + outputExt);
           sendLog(`⬇️ Téléchargement du résultat...`);
-          const response = await axios.get(preSignedUrls[0], { responseType: "stream" });
+          
+          const response = await axios.get(preSignedUrls[0], { 
+            responseType: "stream",
+            timeout: 60000 // 60s timeout pour le téléchargement
+          });
           const writer = fs.createWriteStream(outputFilePath);
           response.data.pipe(writer);
           await finished(writer);
+          
           sendLog(`✅ Fichier traité téléchargé : ${outputFilePath}`);
+          
           if (aristidMetadata) {
             await applyAristidShell(outputFilePath, aristidMetadata, sendLog);
           } else {
             sendLog(`ℹ️ Pas de métadonnées ARISTID disponibles pour ${fileName}`);
           }
+          
           if (await fs.pathExists(originalFilePath)) {
             const dest = path.join(settings.folders.ORIGINALS, path.basename(originalFilePath));
             await fs.move(originalFilePath, dest, { overwrite: true });
             sendLog(`🗃️ Fichier original déplacé dans 'originaux' : ${dest}`);
           }
+          
           updatePendingCount?.();
         } else {
-          sendLog(`❌ Résultat: preSignedUrls manquant`);
+          throw new Error("preSignedUrls manquant dans la réponse");
         }
-        isCompleted = true;
-        break;
+      },
+      // Callback d'erreur
+      async (error) => {
+        sendLog(`❌ Échec du polling pour ${fileName}: ${error.message}`);
+        // Le fichier sera déplacé vers ERROR par le timeout manager si nécessaire
+        if (await fs.pathExists(originalFilePath)) {
+          await fs.move(originalFilePath, path.join(settings.folders.ERROR, fileName), { overwrite: true });
+          sendLog(`📁 ${fileName} déplacé vers ERROR après échec du polling`);
+          updatePendingCount?.();
+        }
       }
-      if (data.outputs?.[0]?.status === "FAILED") {
-        sendLog(`❌ Le traitement a échoué pour ${fileName}`);
-        isCompleted = true;
-        break;
-      }
-    } catch (err) {
-      errorCount++;
-      sendLog(`⚠️ Erreur lors du polling (tentative ${attempts}) : ${err.message}`);
-      if (errorCount >= maxErrors) {
-        sendLog(`❌ Trop d'erreurs lors du polling, abandon (ID: ${processingId})`);
-      }
+    );
+  } finally {
+    // Arrêter le suivi du timeout
+    if (timeoutManager) {
+      timeoutManager.completeTracking(processingId);
     }
   }
 }
@@ -256,5 +283,8 @@ async function processFileWithRetry(filePath, settings, sendLog, updatePendingCo
 
 module.exports = {
   processFileWithRetry,
-  VALID_EXTENSIONS
+  VALID_EXTENSIONS,
+  initializeManagers,
+  timeoutManager,
+  processingPoller
 };

@@ -9,6 +9,7 @@ const hotfolder = require('./main/hotfolder');
 const server = require('./main/server');
 const watcherUtils = require('./main/watcher');
 const { autoUpdater } = require('electron-updater');
+const { initializeManagers, timeoutManager, processingPoller } = require('./main/hotfolder');
 
 // === CHEMIN VERS LES PARAMETRES PERSISTANTS ===
 const settingsPath = path.join(app.getPath("userData"), "settings.json");
@@ -42,6 +43,11 @@ function updatePendingCount() {
 function startWatcher() {
   if (watcher) watcher.close();
   const hotfolderPath = settings.folders.HOTFOLDER;
+  
+  // Initialiser les managers de robustesse
+  initializeManagers(settings, sendLog);
+  sendLog('🛡️ Managers de robustesse initialisés');
+  
   watcher = watcherUtils.startWatcher(
     hotfolderPath,
     settings,
@@ -137,13 +143,35 @@ app.whenReady().then(async () => {
     const dest = path.join(settings.folders.HOTFOLDER, path.basename(filePath));
     try {
       await fs.copy(filePath, dest, { overwrite: true });
-      sendLog(`🖼️ Image ajoutée au hotfolder : ${dest}`);
+      sendLog(`🖼️ Image ajoutée au hotfolder : ${dest}`);
       updatePendingCount();
       return true;
     } catch (err) {
-      sendLog('❌ Erreur lors de la copie de l\'image : ' + err);
+      sendLog('❌ Erreur lors de la copie de l\'image : ' + err);
       return false;
     }
+  });
+
+  // === NOUVEAUX HANDLERS IPC POUR LE MONITORING ===
+  ipcMain.handle('getHotfolderStats', () => {
+    const stats = {
+      watcher: watcher ? watcher.getStats() : null,
+      timeout: timeoutManager ? timeoutManager.getStats() : null,
+      polling: processingPoller ? processingPoller.getGlobalStats() : null
+    };
+    return stats;
+  });
+
+  ipcMain.handle('forceCleanup', () => {
+    if (timeoutManager) {
+      timeoutManager.cleanup();
+      sendLog('🧹 Nettoyage forcé des timeouts effectué');
+    }
+    if (processingPoller) {
+      processingPoller.stopAllPolling();
+      sendLog('🛑 Tous les pollings arrêtés');
+    }
+    return true;
   });
 });
 

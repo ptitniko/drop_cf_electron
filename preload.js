@@ -12,5 +12,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onPendingCount: (callback) => ipcRenderer.on('pending-count', (_event, count) => callback(count)),
   forceScan: () => ipcRenderer.invoke('forceScan'),
   toggleService: () => ipcRenderer.invoke('toggleService'),
-  addImageToHotfolder: (filePath) => ipcRenderer.invoke('addImageToHotfolder', filePath)
+  addImageToHotfolder: (filePath) => ipcRenderer.invoke('addImageToHotfolder', filePath),
+  
+  // Nouvelles APIs pour le monitoring :
+  getHotfolderStats: () => ipcRenderer.invoke('getHotfolderStats'),
+  forceCleanup: () => ipcRenderer.invoke('forceCleanup')
 });
