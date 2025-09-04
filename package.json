@@ -1,6 +1,6 @@
 {
     "name": "drop-to-cf",
-    "version": "1.5.0",
+    "version": "1.5.1",
     "description": "Application de communication avec la creative factory pour le traitement de photo",
     "author": "Nicolas Filloleau",
     "main": "main.js",
